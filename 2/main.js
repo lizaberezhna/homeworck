@@ -1,50 +1,97 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
 
-document.addEventListener("DOMContentLoaded", () => {
+let mindarThree;
+let renderer;
+let scene;
+let camera;
 
-    const mindarThree = new MindARThree({
+let cube;
+let sphere;
+let cone;
+
+init();
+
+async function init() {
+    createMindARScene();
+    createObjects();
+    addObjectsToMarker();
+
+    await startAR();
+}
+
+function createMindARScene() {
+    mindarThree = new MindARThree({
         container: document.body,
-        imageTargetSrc: "../assets/cats.mind",
+        imageTargetSrc: '../assets/cats.mind'
     });
 
-    const { renderer, scene, camera } = mindarThree;
+    renderer = mindarThree.renderer;
+    scene = mindarThree.scene;
+    camera = mindarThree.camera;
+}
 
-    const anchor = mindarThree.addAnchor(0);
+function createObjects() {
+    cube = createCube();
+    sphere = createSphere();
+    cone = createCone();
+}
 
-    const cube = new THREE.Mesh(
-        new THREE.BoxGeometry(0.5, 0.5, 0.5),
-        new THREE.MeshBasicMaterial({ color: "#7707d3" })
-    );
-    cube.position.set(-0.6, 0, 0);
+function createCube() {
+    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x7707d3
+    });
 
-    const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 32, 32),
-        new THREE.MeshBasicMaterial({ color: "#00ff95" })
-    );
-    sphere.position.set(0.6, 0, 0);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(-0.6, 0, 0);
 
-    const cone = new THREE.Mesh(
-        new THREE.ConeGeometry(0.3, 0.7, 32),
-        new THREE.MeshBasicMaterial({ color: "#ff0099" })
-    );
-    cone.position.set(0, 0.7, 0);
+    return mesh;
+}
 
-    anchor.group.add(cube);
-    anchor.group.add(sphere);
-    anchor.group.add(cone);
+function createSphere() {
+    const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x00ff95
+    });
 
-    const start = async () => {
-        await mindarThree.start();
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(0.6, 0, 0);
 
-        renderer.setAnimationLoop((time) => {
-            cube.rotation.y = time / 1000;
-            sphere.rotation.x = time / 1200;
-            cone.rotation.z = time / 1400;
+    return mesh;
+}
 
-            renderer.render(scene, camera);
-        });
-    };
+function createCone() {
+    const geometry = new THREE.ConeGeometry(0.3, 0.7, 32);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0xff0099
+    });
 
-    start();
-});
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(0, 0.7, 0);
+
+    return mesh;
+}
+
+function addObjectsToMarker() {
+    const markerAnchor = mindarThree.addAnchor(0);
+
+    markerAnchor.group.add(cube);
+    markerAnchor.group.add(sphere);
+    markerAnchor.group.add(cone);
+}
+
+async function startAR() {
+    await mindarThree.start();
+
+    renderer.setAnimationLoop((time) => {
+        animateObjects(time);
+        renderer.render(scene, camera);
+    });
+}
+
+function animateObjects(time) {
+    cube.rotation.y = time / 1000;
+    sphere.rotation.x = time / 1200;
+    cone.rotation.z = time / 1400;
+}
