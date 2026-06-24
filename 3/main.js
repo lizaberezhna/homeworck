@@ -19,7 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const materials = [
         new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/unicorn.png") }),
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/micky.jpg") }),
         new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/iodomarine.png") }),
         new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/chashka.png") }),
         new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/valery.jpg") }),
@@ -29,9 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const cube = new THREE.Mesh(geometry1, materials);
     cube.position.set(0, 0, -1.5);
 
-    const textureGitHub = textureLoader.load(
-        "https://raw.githubusercontent.com/ssemerikov/SR_Im-25/refs/heads/main/assets/micky.jpg"
-    );
 
     const geometry2 = new THREE.CapsuleGeometry(0.5, 0.5, 10, 20);
     const material2 = new THREE.MeshBasicMaterial({ map: textureGitHub });
