@@ -1,79 +1,123 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
 
-document.addEventListener("DOMContentLoaded", () => {
+let mindarThree;
+let renderer;
+let scene;
+let camera;
+let markerAnchor;
 
-    const mindarThree = new MindARThree({
+let cube;
+let capsule;
+let circle;
+
+const LOCAL_TEXTURES = [
+    '../assets/unicorn.png',
+    '../assets/micky.jpg',
+    '../assets/iodomarine.png',
+    '../assets/chashka.png',
+    '../assets/valery.jpg',
+    '../assets/morda.png'
+];
+
+const GITHUB_TEXTURE =
+    'https://raw.githubusercontent.com/ssemerikov/SR_Im-25/refs/heads/main/assets/micky.jpg';
+
+const EXTERNAL_TEXTURE =
+    'https://i.imgur.com/UZWIaZk.jpeg';
+
+const textureLoader = new THREE.TextureLoader();
+textureLoader.setCrossOrigin('anonymous');
+
+init();
+
+async function init() {
+    setupARScene();
+    createMarkerAnchor();
+    createTexturedCube();
+    createTexturedCapsule();
+    createTexturedCircle();
+    addObjectsToAnchor();
+
+    await startScene();
+}
+
+function setupARScene() {
+    mindarThree = new MindARThree({
         container: document.body,
-        imageTargetSrc: "../assets/cats.mind",
+        imageTargetSrc: '../assets/cats.mind'
     });
 
-    const { renderer, scene, camera } = mindarThree;
+    renderer = mindarThree.renderer;
+    scene = mindarThree.scene;
+    camera = mindarThree.camera;
+}
 
-    const anchor = mindarThree.addAnchor(0);
+function createMarkerAnchor() {
+    markerAnchor = mindarThree.addAnchor(0);
+}
 
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.setCrossOrigin("anonymous");
+function loadTexture(path) {
+    return textureLoader.load(path);
+}
 
-    const geometry1 = new THREE.BoxGeometry(1, 1, 1);
+function createTexturedCube() {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
 
-    const materials = [
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/unicorn.png") }),
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/micky.jpg") }),
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/iodomarine.png") }),
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/chashka.png") }),
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/valery.jpg") }),
-        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/morda.png") })
-    ];
-
-    const cube = new THREE.Mesh(geometry1, materials);
-    cube.position.set(0, 0, -1.5);
-
-    const textureGitHub = textureLoader.load(
-        "https://raw.githubusercontent.com/ssemerikov/SR_Im-25/refs/heads/main/assets/micky.jpg"
-    );
-
-    const geometry2 = new THREE.CapsuleGeometry(0.5, 0.5, 10, 20);
-    const material2 = new THREE.MeshBasicMaterial({ map: textureGitHub });
-
-    const capsule = new THREE.Mesh(geometry2, material2);
-    capsule.position.set(-2, 0, 0);
-
-
-    const textureExternal = textureLoader.load(
-        "https://i.imgur.com/UZWIaZk.jpeg"
-    );
-
-    const geometry3 = new THREE.CircleGeometry(0.7, 32);
-    const material3 = new THREE.MeshBasicMaterial({
-        map: textureExternal,
-        side: THREE.DoubleSide // критично для кола
-    });
-
-    const circle = new THREE.Mesh(geometry3, material3);
-    circle.position.set(1.2, 0, 0);
-
-    // додаємо в anchor
-    anchor.group.add(cube);
-    anchor.group.add(capsule);
-    anchor.group.add(circle);
-
-    const start = async () => {
-        await mindarThree.start();
-
-        renderer.setAnimationLoop((time) => {
-
-            cube.rotation.x = time / 2000;
-            cube.rotation.y = time / 1000;
-
-            const s = 0.3 * Math.sin(time / 1000) + 0.8;
-            capsule.scale.set(s, s, s);
-
-            circle.position.x = 1.2 + Math.sin(time / 1000) * 0.8;
-
-            renderer.render(scene, camera);
+    const cubeMaterials = LOCAL_TEXTURES.map((texturePath) => {
+        return new THREE.MeshBasicMaterial({
+            map: loadTexture(texturePath)
         });
-    };
+    });
 
-    start();
-});
+    cube = new THREE.Mesh(geometry, cubeMaterials);
+    cube.position.set(0, 0, -1.5);
+}
+
+function createTexturedCapsule() {
+    const geometry = new THREE.CapsuleGeometry(0.5, 0.5, 10, 20);
+
+    const material = new THREE.MeshBasicMaterial({
+        map: loadTexture(GITHUB_TEXTURE)
+    });
+
+    capsule = new THREE.Mesh(geometry, material);
+    capsule.position.set(-2, 0, 0);
+}
+
+function createTexturedCircle() {
+    const geometry = new THREE.CircleGeometry(0.7, 32);
+
+    const material = new THREE.MeshBasicMaterial({
+        map: loadTexture(EXTERNAL_TEXTURE),
+        side: THREE.DoubleSide
+    });
+
+    circle = new THREE.Mesh(geometry, material);
+    circle.position.set(1.2, 0, 0);
+}
+
+function addObjectsToAnchor() {
+    markerAnchor.group.add(cube);
+    markerAnchor.group.add(capsule);
+    markerAnchor.group.add(circle);
+}
+
+async function startScene() {
+    await mindarThree.start();
+
+    renderer.setAnimationLoop((time) => {
+        updateAnimation(time);
+        renderer.render(scene, camera);
+    });
+}
+
+function updateAnimation(time) {
+    cube.rotation.x = time / 2000;
+    cube.rotation.y = time / 1000;
+
+    const scaleValue = 0.3 * Math.sin(time / 1000) + 0.8;
+    capsule.scale.set(scaleValue, scaleValue, scaleValue);
+
+    circle.position.x = 1.2 + Math.sin(time / 1000) * 0.8;
+}
