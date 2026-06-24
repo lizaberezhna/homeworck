@@ -1,96 +1,80 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
 
-let mindarThree;
-let renderer;
-let scene;
-let camera;
+document.addEventListener("DOMContentLoaded", () => {
 
-let cube;
-let sphere;
-let cone;
-
-init();
-
-async function init() {
-    createMindARScene();
-    createObjects();
-    addObjectsToMarker();
-
-    await startAR();
-}
-
-function createMindARScene() {
-    mindarThree = new MindARThree({
+    const arScene = new MindARThree({
         container: document.body,
-        imageTargetSrc: '../assets/cats.mind'
+        imageTargetSrc: "../assets/cats.mind",
     });
 
-    renderer = mindarThree.renderer;
-    scene = mindarThree.scene;
-    camera = mindarThree.camera;
-}
+    const renderer = arScene.renderer;
+    const scene = arScene.scene;
+    const camera = arScene.camera;
 
-function createObjects() {
-    cube = createCube();
-    sphere = createSphere();
-    cone = createCone();
-}
+    const marker = arScene.addAnchor(0);
+
+    const purpleCube = createCube();
+    const greenSphere = createSphere();
+    const pinkCone = createCone();
+
+    marker.group.add(purpleCube);
+    marker.group.add(greenSphere);
+    marker.group.add(pinkCone);
+
+    const startScene = async () => {
+        await arScene.start();
+
+        renderer.setAnimationLoop((time) => {
+            rotateObjects(time, purpleCube, greenSphere, pinkCone);
+            renderer.render(scene, camera);
+        });
+    };
+
+    startScene();
+
+});
 
 function createCube() {
-    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0x7707d3
+    const cubeGeometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+
+    const cubeMaterial = new THREE.MeshBasicMaterial({
+        color: "#7707d3"
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(-0.6, 0, 0);
+    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
+    cube.position.set(-0.6, 0, 0);
 
-    return mesh;
+    return cube;
 }
 
 function createSphere() {
-    const geometry = new THREE.SphereGeometry(0.3, 32, 32);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0x00ff95
+    const sphereGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+
+    const sphereMaterial = new THREE.MeshBasicMaterial({
+        color: "#00ff95"
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0.6, 0, 0);
+    const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+    sphere.position.set(0.6, 0, 0);
 
-    return mesh;
+    return sphere;
 }
 
 function createCone() {
-    const geometry = new THREE.ConeGeometry(0.3, 0.7, 32);
-    const material = new THREE.MeshBasicMaterial({
-        color: 0xff0099
+    const coneGeometry = new THREE.ConeGeometry(0.3, 0.7, 32);
+
+    const coneMaterial = new THREE.MeshBasicMaterial({
+        color: "#ff0099"
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(0, 0.7, 0);
+    const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+    cone.position.set(0, 0.7, 0);
 
-    return mesh;
+    return cone;
 }
 
-function addObjectsToMarker() {
-    const markerAnchor = mindarThree.addAnchor(0);
-
-    markerAnchor.group.add(cube);
-    markerAnchor.group.add(sphere);
-    markerAnchor.group.add(cone);
-}
-
-async function startAR() {
-    await mindarThree.start();
-
-    renderer.setAnimationLoop((time) => {
-        animateObjects(time);
-        renderer.render(scene, camera);
-    });
-}
-
-function animateObjects(time) {
+function rotateObjects(time, cube, sphere, cone) {
     cube.rotation.y = time / 1000;
     sphere.rotation.x = time / 1200;
     cone.rotation.z = time / 1400;
