@@ -1,117 +1,79 @@
 import * as THREE from 'three';
 import { MindARThree } from 'mindar-image-three';
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-    const arSystem = new MindARThree({
+    const mindarThree = new MindARThree({
         container: document.body,
-        imageTargetSrc: "../assets/cats.mind"
+        imageTargetSrc: "../assets/cats.mind",
     });
 
-    const renderer = arSystem.renderer;
-    const scene = arSystem.scene;
-    const camera = arSystem.camera;
+    const { renderer, scene, camera } = mindarThree;
 
-    const targetAnchor = arSystem.addAnchor(0);
+    const anchor = mindarThree.addAnchor(0);
 
-    const loader = new THREE.TextureLoader();
-    loader.setCrossOrigin("anonymous");
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.setCrossOrigin("anonymous");
 
-    // ---------- Куб ----------
+    const geometry1 = new THREE.BoxGeometry(1, 1, 1);
 
-    const cubeTextures = [
-        new THREE.MeshBasicMaterial({ map: loader.load("../assets/unicorn.png") }),
-        new THREE.MeshBasicMaterial({ map: loader.load("../assets/micky.jpg") }),
-        new THREE.MeshBasicMaterial({ map: loader.load("../assets/iodomarine.png") }),
-        new THREE.MeshBasicMaterial({ map: loader.load("../assets/chashka.png") }),
-        new THREE.MeshBasicMaterial({ map: loader.load("../assets/valery.jpg") }),
-        new THREE.MeshBasicMaterial({ map: loader.load("../assets/morda.png") })
+    const materials = [
+        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/unicorn.png") }),
+        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/micky.jpg") }),
+        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/iodomarine.png") }),
+        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/chashka.png") }),
+        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/valery.jpg") }),
+        new THREE.MeshBasicMaterial({ map: textureLoader.load("../assets/morda.png") })
     ];
 
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cube = new THREE.Mesh(geometry1, materials);
+    cube.position.set(0, 0, -1.5);
 
-    const texturedCube = new THREE.Mesh(
-        cubeGeometry,
-        cubeTextures
+    const textureGitHub = textureLoader.load(
+        "https://raw.githubusercontent.com/ssemerikov/SR_Im-25/refs/heads/main/assets/micky.jpg"
     );
 
-    texturedCube.position.set(0, 0, -1.5);
+    const geometry2 = new THREE.CapsuleGeometry(0.5, 0.5, 10, 20);
+    const material2 = new THREE.MeshBasicMaterial({ map: textureGitHub });
 
-    // ---------- Циліндр ----------
+    const capsule = new THREE.Mesh(geometry2, material2);
+    capsule.position.set(-2, 0, 0);
 
-    const cylinderTexture = loader.load("../assets/micky.jpg");
 
-    const cylinderGeometry = new THREE.CylinderGeometry(
-        0.4,
-        0.4,
-        1.2,
-        32
-    );
-
-    const cylinderMaterial = new THREE.MeshBasicMaterial({
-        map: cylinderTexture
-    });
-
-    const texturedCylinder = new THREE.Mesh(
-        cylinderGeometry,
-        cylinderMaterial
-    );
-
-    texturedCylinder.position.set(-2, 0, 0);
-
-    // ---------- Коло ----------
-
-    const circleTexture = loader.load(
+    const textureExternal = textureLoader.load(
         "https://i.imgur.com/UZWIaZk.jpeg"
     );
 
-    const circleGeometry = new THREE.CircleGeometry(
-        0.7,
-        32
-    );
-
-    const circleMaterial = new THREE.MeshBasicMaterial({
-        map: circleTexture,
-        side: THREE.DoubleSide
+    const geometry3 = new THREE.CircleGeometry(0.7, 32);
+    const material3 = new THREE.MeshBasicMaterial({
+        map: textureExternal,
+        side: THREE.DoubleSide // критично для кола
     });
 
-    const texturedCircle = new THREE.Mesh(
-        circleGeometry,
-        circleMaterial
-    );
+    const circle = new THREE.Mesh(geometry3, material3);
+    circle.position.set(1.2, 0, 0);
 
-    texturedCircle.position.set(1.2, 0, 0);
+    // додаємо в anchor
+    anchor.group.add(cube);
+    anchor.group.add(capsule);
+    anchor.group.add(circle);
 
-    // ---------- Додавання до маркера ----------
+    const start = async () => {
+        await mindarThree.start();
 
-    targetAnchor.group.add(texturedCube);
-    targetAnchor.group.add(texturedCylinder);
-    targetAnchor.group.add(texturedCircle);
+        renderer.setAnimationLoop((time) => {
 
-    // ---------- Запуск AR ----------
+            cube.rotation.x = time / 2000;
+            cube.rotation.y = time / 1000;
 
-    await arSystem.start();
+            const s = 0.3 * Math.sin(time / 1000) + 0.8;
+            capsule.scale.set(s, s, s);
 
-    renderer.setAnimationLoop((time) => {
+            circle.position.x = 1.2 + Math.sin(time / 1000) * 0.8;
 
-        // обертання куба
-        texturedCube.rotation.x = time * 0.0005;
-        texturedCube.rotation.y = time * 0.001;
+            renderer.render(scene, camera);
+        });
+    };
 
-        // зміна масштабу циліндра
-        const scaleFactor = 0.8 + 0.3 * Math.sin(time * 0.001);
-
-        texturedCylinder.scale.set(
-            scaleFactor,
-            scaleFactor,
-            scaleFactor
-        );
-
-        // рух кола
-        texturedCircle.position.x =
-            1.2 + Math.sin(time * 0.001) * 0.8;
-
-        renderer.render(scene, camera);
-    });
-
+    start();
 });
