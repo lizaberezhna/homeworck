@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import {MindARThree} from 'mindar-face-three';
-
+import { MindARThree } from 'mindar-face-three';
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -21,8 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
         directLight.position.set(0, 0, 1);
         scene.add(directLight);
 
+        // Завантаження текстури маски з онлайн URL
         const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load('../assets/face.png');
+        const texture = textureLoader.load('https://raw.githubusercontent.com/your-repo/images/main/face.png');
+        // Або використовуйте будь-яке інше онлайн зображення:
+        // const texture = textureLoader.load('https://i.imgur.com/your-image.png');
+        // const texture = textureLoader.load('https://cdn.jsdelivr.net/gh/your-repo/face.png');
+        
         const faceMesh = mindarThree.addFaceMesh();
         faceMesh.material.map = texture;
         faceMesh.material.transparent = true;
@@ -30,8 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
         scene.add(faceMesh);
         
         await mindarThree.start();
-
-
 
         renderer.setAnimationLoop(( time ) => {
             renderer.render(scene, camera);
